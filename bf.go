@@ -23,6 +23,10 @@ const (
 
 type Instruction interface {
 	Emit() string
+
+	Name() string
+
+	Immediate() int
 }
 
 type GeneralInst string
@@ -31,17 +35,33 @@ func (i GeneralInst) Emit() string {
 	return string(i)
 }
 
+func (i GeneralInst) Name() string {
+	return string(i)
+}
+
+func (i GeneralInst) Immediate() int {
+	return 0
+}
+
 type Branch struct {
 	// addr is the address of this branch
 	addr int
 	// name is BZ or BN.
 	name string
-	// dest is the branch destination instruction
+	// dest is the branch destination instruction (pc-relative)
 	dest int
 }
 
 func (b *Branch) Emit() string {
 	return fmt.Sprintf("%s %d", b.name, b.dest)
+}
+
+func (b *Branch) Name() string {
+	return b.name
+}
+
+func (b *Branch) Immediate() int {
+	return b.dest
 }
 
 // strip strips the program of all invalid commands.
