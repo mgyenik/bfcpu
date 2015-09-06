@@ -20,6 +20,31 @@ const (
 	JmpB        = ']'
 )
 
+func emit(prog []byte) {
+	for _, inst := range prog {
+		switch BfInst(inst) {
+		case IncD:
+			log.Println("INCD")
+		case DecD:
+			log.Println("DECD")
+		case IncP:
+			log.Println("INCP")
+		case DecP:
+			log.Println("DECP")
+		case Out:
+			log.Println("OUT")
+		case In:
+			log.Println("IN")
+		case JmpF:
+			log.Println("BZ TODO")
+		case JmpB:
+			log.Println("BN TODO")
+		default:
+			log.Printf("Ignoring: '%c'", inst)
+		}
+	}
+}
+
 func main() {
 	var r io.Reader
 
@@ -40,5 +65,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Printf("%s", prog)
+	log.Printf("Program: %s\n", prog)
+	emit(prog)
 }
