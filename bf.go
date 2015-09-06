@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 )
@@ -20,20 +21,24 @@ const (
 )
 
 func main() {
-	var prog io.Reader
+	var r io.Reader
 
 	if len(os.Args) < 2 {
-		prog = os.Stdin
+		r = os.Stdin
 	} else {
 		var err error
-		prog, err = os.Open(os.Args[1])
+		r, err = os.Open(os.Args[1])
 		if err != nil {
 			log.Printf("Error opening file: %v", err)
 			os.Exit(1)
 		}
 	}
 
-	b := make([]byte, 512)
-	prog.Read(b)
-	log.Printf("%s", b)
+	prog, err := ioutil.ReadAll(r)
+	if err != nil {
+		log.Printf("Unable to read program: %v", err)
+		os.Exit(1)
+	}
+
+	log.Printf("%s", prog)
 }
