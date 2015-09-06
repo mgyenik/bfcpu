@@ -100,9 +100,9 @@ func assemble(prog []BfInst) (out []Instruction) {
 			b := Branch{
 				addr: pc,
 				name: "BN",
-				dest: dest.addr + 1,
+				dest: pc - (dest.addr + 1),
 			}
-			dest.dest = pc + 1
+			dest.dest = (pc - dest.addr) + 1
 			out = append(out, &b)
 		default:
 			log.Fatalf("Bad instrustion: '%c'", inst)
