@@ -20,9 +20,34 @@ const (
 	JmpB        = ']'
 )
 
-func emit(prog []byte) {
+// strip strips the program of all invalid commands.
+func strip(prog []byte) (out []BfInst) {
 	for _, inst := range prog {
 		switch BfInst(inst) {
+		case IncD:
+			fallthrough
+		case DecD:
+			fallthrough
+		case IncP:
+			fallthrough
+		case DecP:
+			fallthrough
+		case Out:
+			fallthrough
+		case In:
+			fallthrough
+		case JmpF:
+			fallthrough
+		case JmpB:
+			out = append(out, BfInst(inst))
+		}
+	}
+	return
+}
+
+func emit(prog []BfInst) {
+	for _, inst := range prog {
+		switch inst {
 		case IncD:
 			log.Println("INCD")
 		case DecD:
@@ -40,7 +65,7 @@ func emit(prog []byte) {
 		case JmpB:
 			log.Println("BN TODO")
 		default:
-			log.Printf("Ignoring: '%c'", inst)
+			log.Fatalf("Bad instrustion: '%c'", inst)
 		}
 	}
 }
@@ -59,12 +84,16 @@ func main() {
 		}
 	}
 
-	prog, err := ioutil.ReadAll(r)
+	input, err := ioutil.ReadAll(r)
 	if err != nil {
 		log.Printf("Unable to read program: %v", err)
 		os.Exit(1)
 	}
 
-	log.Printf("Program: %s\n", prog)
-	emit(prog)
+	log.Printf("Program: %s\n", input)
+
+	stripped := strip(input)
+	log.Printf("Stripped program: %s\n", stripped)
+
+	emit(stripped)
 }
