@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -19,6 +20,29 @@ const (
 	JmpF        = '['
 	JmpB        = ']'
 )
+
+type Instruction interface {
+	Emit() string
+}
+
+type GeneralInst string
+
+func (i GeneralInst) Emit() string {
+	return string(i)
+}
+
+type Branch struct {
+	// addr is the address of this branch
+	addr int
+	// name is BZ or BN.
+	name string
+	// dest is the branch destination instruction
+	dest int
+}
+
+func (b *Branch) Emit() string {
+	return fmt.Sprintf("%s %d", b.name, b.dest)
+}
 
 // strip strips the program of all invalid commands.
 func strip(prog []byte) (out []BfInst) {
@@ -45,29 +69,49 @@ func strip(prog []byte) (out []BfInst) {
 	return
 }
 
-func emit(prog []BfInst) {
+func assemble(prog []BfInst) (out []Instruction) {
+	var pc int
+	var branchStack []*Branch
+
 	for _, inst := range prog {
 		switch inst {
 		case IncD:
-			log.Println("INCD")
+			out = append(out, GeneralInst("INCD"))
 		case DecD:
-			log.Println("DECD")
+			out = append(out, GeneralInst("DECD"))
 		case IncP:
-			log.Println("INCP")
+			out = append(out, GeneralInst("INCP"))
 		case DecP:
-			log.Println("DECP")
+			out = append(out, GeneralInst("DECP"))
 		case Out:
-			log.Println("OUT")
+			out = append(out, GeneralInst("OUT"))
 		case In:
-			log.Println("IN")
+			out = append(out, GeneralInst("IN"))
 		case JmpF:
-			log.Println("BZ TODO")
+			b := Branch{
+				addr: pc,
+				name: "BZ",
+			}
+			branchStack = append(branchStack, &b)
+			out = append(out, &b)
 		case JmpB:
-			log.Println("BN TODO")
+			dest := branchStack[len(branchStack)-1]
+			branchStack = branchStack[:len(branchStack)-1]
+			b := Branch{
+				addr: pc,
+				name: "BN",
+				dest: dest.addr + 1,
+			}
+			dest.dest = pc + 1
+			out = append(out, &b)
 		default:
 			log.Fatalf("Bad instrustion: '%c'", inst)
 		}
+
+		pc++
 	}
+
+	return
 }
 
 func main() {
@@ -95,5 +139,9 @@ func main() {
 	stripped := strip(input)
 	log.Printf("Stripped program: %s\n", stripped)
 
-	emit(stripped)
+	instructions := assemble(stripped)
+
+	for pc, i := range instructions {
+		log.Printf("%d: %v", pc, i.Emit())
+	}
 }
